@@ -52,7 +52,7 @@ const loginUser = asyncHandler(async (req, res) => {
         },
       },
       process.env.ACCSESS_TOKEN_SECRET,
-      { expiresIn: "1m" }
+      { expiresIn: "1h" }
     );
     res.status(200).json({ accsessToken });
   } else {
@@ -61,20 +61,11 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// const updateContact = asyncHandler(async (req, res) => {
-//   const contact = await Contact.findById(req.params.id);
-//   console.log(contact);
-//   if (!contact) {
-//     res.status(404);
-//     throw new Error("Contact not found");
-//   }
-//   const updatedContact = await Contact.findByIdAndUpdate(
-//     req.params.id,
-//     req.body,
-//     {
-//       new: true,
-//     }
-//   );
+const currentUser = asyncHandler(async (req, res) => {
+  console.log("currentUser", currentUser);
+  res.json(req.user);
+  res.status(203).json({ message: "TEST" });
+});
 
 //   res.status(201).json(updatedContact);
 // });
@@ -100,7 +91,7 @@ const loginUser = asyncHandler(async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
-  // updateContact,
+  currentUser,
   // deleteContact,
   // getContact,
 };
