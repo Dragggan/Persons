@@ -1,9 +1,9 @@
 const bcrypt = require("bcrypt");
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
+const jwt = require("jsonwebtoken");
 
 const registerUser = asyncHandler(async (req, res) => {
-  console.log('%c  "TEST"==> ', "color:red;font-size:12px;", "TEST");
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     res.status(400);
@@ -17,12 +17,12 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   // create has pass
   const hashedPassword = await bcrypt.hash(password, 10);
-  const user = User.create({
+  const user = await User.create({
     username,
     email,
     password: hashedPassword,
   });
-  console.log(`User created ${user}`);
+  console.log(`User created ${user.username} , with email ${user.email}`);
   if (user) {
     res.status(201).json({ _id: user.id, email: user.email });
   } else {
@@ -32,19 +32,34 @@ const registerUser = asyncHandler(async (req, res) => {
   res.json(200);
 });
 
-// const createContact = asyncHandler(async (req, res) => {
-//   const { name, email, phone } = req.body;
-//   if (!name || !email || !phone) {
-//     res.status(400);
-//     throw new Error("All fields are mandatory!");
-//   }
-//   const contact = await Contact.create({
-//     name,
-//     email,
-//     phone,
-//   });
-//   res.status(201).json(contact);
-// });
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Please provide valid username and password");
+  }
+  const user = await User.findOne({
+    email,
+  });
+
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const accsessToken = jwt.sign(
+      {
+        user: {
+          username: user.username,
+          email: user.email,
+          id: user.id,
+        },
+      },
+      process.env.ACCSESS_TOKEN_SECRET,
+      { expiresIn: "1m" }
+    );
+    res.status(200).json({ accsessToken });
+  } else {
+    res.status(401);
+    throw new Error("Email or password are not valid");
+  }
+});
 
 // const updateContact = asyncHandler(async (req, res) => {
 //   const contact = await Contact.findById(req.params.id);
@@ -84,7 +99,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 module.exports = {
   registerUser,
-  // createContact,
+  loginUser,
   // updateContact,
   // deleteContact,
   // getContact,
